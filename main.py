@@ -20,68 +20,336 @@ warnings.filterwarnings('ignore')
 
 # Configure the page
 st.set_page_config(
-    page_title="AI Media Authenticity Analyzer",
-    page_icon="🔍",
-    layout="wide",
+    page_title="Authenticity Analyzer",
+    page_icon="○",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Apply custom CSS for professional monochrome theme
+# Apply shadcn/ui inspired styling
 st.markdown("""
 <style>
-    .main > div {
-        padding: 1rem 2rem;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 221.2 83.2% 53.3%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222.2 84% 4.9%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 222.2 84% 4.9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 221.2 83.2% 53.3%;
+        --radius: 0.5rem;
     }
     
     .stApp {
-        background-color: #ffffff;
-        color: #1a1a1a;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-feature-settings: 'cv11', 'ss01';
+        font-variation-settings: 'opsz' 32;
     }
     
-    .header-container {
-        background: linear-gradient(90deg, #2c2c2c 0%, #1a1a1a 100%);
-        padding: 2rem;
-        margin: -1rem -2rem 2rem -2rem;
-        color: white;
+    .main > div {
+        padding: 2rem 1rem;
+        max-width: 1024px;
+        margin: 0 auto;
+    }
+    
+    /* Header */
+    .app-header {
         text-align: center;
-        border-bottom: 3px solid #e0e0e0;
+        margin: 0 0 4rem 0;
+        padding: 0;
     }
     
-    .metric-card {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    
-    .authenticity-score {
-        font-size: 3rem;
+    .app-title {
+        font-size: 2.5rem;
         font-weight: 700;
-        text-align: center;
-        margin: 1rem 0;
+        color: hsl(var(--foreground));
+        margin: 0 0 0.75rem 0;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
     }
     
-    .score-high { color: #28a745; }
-    .score-medium { color: #ffc107; }
-    .score-low { color: #dc3545; }
-    
-    .analysis-section {
-        background: #ffffff;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1rem 0;
+    .app-subtitle {
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: hsl(var(--muted-foreground));
+        margin: 0;
+        line-height: 1.5;
     }
     
-    .upload-section {
-        border: 2px dashed #6c757d;
-        border-radius: 8px;
-        padding: 2rem;
+    /* Upload area - shadcn card style */
+    .upload-container {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 3rem 2rem;
         text-align: center;
-        background: #f8f9fa;
         margin: 2rem 0;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+    
+    .upload-container:hover {
+        border-color: hsl(var(--ring));
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    
+    .upload-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: hsl(var(--card-foreground));
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .upload-subtitle {
+        font-size: 0.875rem;
+        color: hsl(var(--muted-foreground));
+        margin: 0 0 1.5rem 0;
+    }
+    
+    /* Results container */
+    .results-container {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+    
+    /* Score display */
+    .score-container {
+        text-align: center;
+        padding: 2rem 0;
+        margin: 0 0 2rem 0;
+        border-bottom: 1px solid hsl(var(--border));
+    }
+    
+    .score-value {
+        font-size: 4rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .score-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: hsl(var(--muted-foreground));
+        margin: 0.5rem 0 0 0;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    
+    .score-high { color: hsl(142 76% 36%); }
+    .score-medium { color: hsl(43 96% 56%); }
+    .score-low { color: hsl(var(--destructive)); }
+    
+    /* Status badges - shadcn badge style */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: calc(var(--radius) - 2px);
+        font-weight: 500;
+        font-size: 0.75rem;
+        margin: 1rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .status-authentic {
+        background: hsl(142 76% 36% / 0.1);
+        color: hsl(142 76% 36%);
+        border: 1px solid hsl(142 76% 36% / 0.2);
+    }
+    
+    .status-suspicious {
+        background: hsl(43 96% 56% / 0.1);
+        color: hsl(43 96% 46%);
+        border: 1px solid hsl(43 96% 56% / 0.2);
+    }
+    
+    .status-likely-fake {
+        background: hsl(var(--destructive) / 0.1);
+        color: hsl(var(--destructive));
+        border: 1px solid hsl(var(--destructive) / 0.2);
+    }
+    
+    /* Section headers */
+    .section-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid hsl(var(--border));
+    }
+    
+    /* Cards */
+    .analysis-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin: 0.75rem 0;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .analysis-card:hover {
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    
+    /* Buttons - shadcn button style */
+    .stButton > button {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border: 1px solid hsl(var(--primary));
+        border-radius: var(--radius);
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease-in-out;
+        width: 100%;
+        height: 2.5rem;
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+    
+    .stButton > button:hover {
+        background: hsl(var(--primary) / 0.9);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    
+    .stButton > button:focus {
+        outline: 2px solid hsl(var(--ring));
+        outline-offset: 2px;
+    }
+    
+    /* Metrics */
+    .metric-item {
+        background: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .metric-item:hover {
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+    
+    .metric-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin: 0;
+    }
+    
+    .metric-label {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin: 0.25rem 0 0 0;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display:none;}
+    
+    .stFileUploader {
+        border: none !important;
+    }
+    
+    .stFileUploader > div {
+        border: none !important;
+        background: transparent !important;
+    }
+    
+    /* Tabs styling - shadcn tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0;
+        background: hsl(var(--muted));
+        border-radius: var(--radius);
+        padding: 0.25rem;
+        border: 1px solid hsl(var(--border));
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        border-radius: calc(var(--radius) - 2px);
+        color: hsl(var(--muted-foreground));
+        font-weight: 500;
+        padding: 0.375rem 0.75rem;
+        border: none;
+        font-size: 0.875rem;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+    
+    /* Progress indicator */
+    .analysis-progress {
+        background: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: center;
+    }
+    
+    .progress-step {
+        font-size: 0.875rem;
+        color: hsl(var(--muted-foreground));
+        margin: 0.5rem 0;
+    }
+    
+    .progress-step.active {
+        color: hsl(var(--primary));
+        font-weight: 500;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: hsl(var(--muted));
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted-foreground) / 0.3);
+        border-radius: var(--radius);
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -376,19 +644,35 @@ class MediaAuthenticityAnalyzer:
         fig1.add_trace(go.Scatter(
             x=frames, y=consistency,
             mode='lines+markers',
-            line=dict(color='#2c2c2c', width=2),
-            marker=dict(size=8),
+            line=dict(color='hsl(221.2, 83.2%, 53.3%)', width=2.5),
+            marker=dict(size=5, color='hsl(221.2, 83.2%, 53.3%)'),
             name='Consistency Score'
         ))
         
         fig1.update_layout(
-            title='Facial Landmark Consistency Analysis',
-            xaxis_title='Frame/Region',
-            yaxis_title='Consistency Score (%)',
-            paper_bgcolor='white',
-            plot_bgcolor='white',
-            font=dict(color='#1a1a1a'),
-            showlegend=False
+            title=dict(
+                text='Content Consistency Analysis',
+                font=dict(size=16, color='hsl(222.2, 84%, 4.9%)', family='Inter'),
+                x=0,
+                pad=dict(t=0, b=20)
+            ),
+            xaxis_title='Analysis Points',
+            yaxis_title='Score (%)',
+            paper_bgcolor='hsl(0, 0%, 100%)',
+            plot_bgcolor='hsl(0, 0%, 100%)',
+            font=dict(color='hsl(222.2, 84%, 4.9%)', family='Inter', size=12),
+            showlegend=False,
+            margin=dict(l=40, r=20, t=50, b=40),
+            xaxis=dict(
+                gridcolor='hsl(214.3, 31.8%, 91.4%)',
+                zerolinecolor='hsl(214.3, 31.8%, 91.4%)',
+                tickfont=dict(color='hsl(215.4, 16.3%, 46.9%)')
+            ),
+            yaxis=dict(
+                gridcolor='hsl(214.3, 31.8%, 91.4%)',
+                zerolinecolor='hsl(214.3, 31.8%, 91.4%)',
+                tickfont=dict(color='hsl(215.4, 16.3%, 46.9%)')
+            )
         )
         
         graphs['facial_landmarks'] = fig1
@@ -508,190 +792,220 @@ class MediaAuthenticityAnalyzer:
 def main():
     # Header
     st.markdown("""
-    <div class="header-container">
-        <h1>🔍 AI Media Authenticity Analyzer</h1>
-        <p>Advanced deepfake and AI-generated content detection using Google Gemini AI</p>
+    <div class="app-header">
+        <h1 class="app-title">Authenticity Analyzer</h1>
+        <p class="app-subtitle">Advanced AI-powered content verification</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Initialize API key
     api_key = "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"
     
-    if not api_key:                                                                                                                                                                                                                                                 
-        st.error("❌ Gemini API key not configured. Please check your API key.")
+    if not api_key:
+        st.error("⚠️ API configuration required")
         st.stop()
     
     # Initialize analyzer
     try:
         analyzer = MediaAuthenticityAnalyzer(api_key)
     except Exception as e:
-        st.error(f"❌ Failed to initialize analyzer: {str(e)}")
+        st.error(f"⚠️ System initialization failed: {str(e)}")
         st.stop()
     
     # File upload section
-    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
-    st.markdown("### 📁 Upload Media File")
-    st.markdown("*Supported formats: JPEG, PNG, MP4, AVI*")
+    st.markdown("""
+    <div class="upload-container">
+        <div style="margin-bottom: 1rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: hsl(var(--muted-foreground));">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+        </div>
+        <h3 class="upload-title">Upload Media</h3>
+        <p class="upload-subtitle">Drag and drop or click to select • JPG, PNG, MP4, AVI</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     uploaded_file = st.file_uploader(
-        "Choose a file",
+        "Upload file",
         type=['jpg', 'jpeg', 'png', 'mp4', 'avi'],
-        accept_multiple_files=False
+        accept_multiple_files=False,
+        label_visibility="collapsed"
     )
-    st.markdown('</div>', unsafe_allow_html=True)
     
     if uploaded_file is not None:
         # Determine file type
         file_type = 'image' if uploaded_file.type.startswith('image') else 'video'
         
-        # Display file info
+        # File information in minimal card format
+        st.markdown('<div class="results-container">', unsafe_allow_html=True)
+        
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("📄 File Type", file_type.title())
+            st.markdown(f'<div class="metric-item"><div class="metric-value">{file_type.title()}</div><div class="metric-label">Type</div></div>', unsafe_allow_html=True)
         with col2:
-            st.metric("📏 File Size", f"{len(uploaded_file.getvalue()) / 1024:.1f} KB")
+            size_kb = len(uploaded_file.getvalue()) / 1024
+            size_display = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb/1024:.1f} MB"
+            st.markdown(f'<div class="metric-item"><div class="metric-value">{size_display}</div><div class="metric-label">Size</div></div>', unsafe_allow_html=True)
         with col3:
-            st.metric("🕒 Upload Time", datetime.now().strftime("%H:%M:%S"))
+            st.markdown(f'<div class="metric-item"><div class="metric-value">{uploaded_file.name[:15]}{"..." if len(uploaded_file.name) > 15 else ""}</div><div class="metric-label">File</div></div>', unsafe_allow_html=True)
         
-        # Show preview
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Show preview for images only (minimal)
         if file_type == 'image':
-            st.markdown("### 🖼️ Image Preview")
             image = Image.open(uploaded_file)
-            st.image(image, caption=uploaded_file.name, use_column_width=True)
+            st.image(image, use_column_width=True)
         
         # Analysis button
-        if st.button("🔍 **Analyze Media Authenticity**", type="primary"):
-            with st.spinner("🔄 Analyzing media file... This may take a few moments."):
+        if st.button("Analyze", type="primary"):
+            # Progress container
+            progress_container = st.empty()
+            
+            with progress_container.container():
+                st.markdown("""
+                <div class="analysis-progress">
+                    <div class="progress-step active">Analyzing media content...</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 # Step 1: Extract metadata
-                st.write("**Step 1:** Extracting metadata...")
                 if file_type == 'image':
                     metadata = analyzer.extract_image_metadata(uploaded_file)
                 else:
                     metadata = analyzer.extract_video_metadata(uploaded_file)
                 
-                # Step 2: Gemini analysis
-                st.write("**Step 2:** Performing AI analysis...")
+                # Step 2: AI analysis
+                progress_container.markdown("""
+                <div class="analysis-progress">
+                    <div class="progress-step">Analyzing media content...</div>
+                    <div class="progress-step active">Running AI verification...</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 gemini_analysis = analyzer.analyze_media(uploaded_file, file_type)
                 
                 # Step 3: Calculate score
-                st.write("**Step 3:** Calculating authenticity score...")
+                progress_container.markdown("""
+                <div class="analysis-progress">
+                    <div class="progress-step">Analyzing media content...</div>
+                    <div class="progress-step">Running AI verification...</div>
+                    <div class="progress-step active">Computing authenticity score...</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 score, factors = analyzer.calculate_authenticity_score(metadata, gemini_analysis)
                 
                 # Step 4: Generate graphs
-                st.write("**Step 4:** Generating analysis visualizations...")
                 graphs = analyzer.generate_analysis_graphs(score, factors, metadata)
             
-            # Display results
-            st.markdown("---")
-            st.markdown("## 📊 Analysis Results")
+            # Clear progress and show results
+            progress_container.empty()
             
-            # Authenticity Score
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown("### 🎯 Overall Authenticity Score")
+            # Results container
+            st.markdown('<div class="results-container">', unsafe_allow_html=True)
             
+            # Score display
             score_class = "score-high" if score >= 70 else "score-medium" if score >= 40 else "score-low"
-            st.markdown(f'<div class="authenticity-score {score_class}">{score:.1f}%</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="score-container">
+                <div class="score-value {score_class}">{score:.0f}%</div>
+                <div class="score-label">Authenticity Score</div>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Interpretation
-            if score >= 80:
-                st.success("✅ **HIGH AUTHENTICITY** - This media appears to be genuine with minimal signs of manipulation.")
-            elif score >= 60:
-                st.warning("⚠️ **MODERATE AUTHENTICITY** - Some suspicious elements detected. Manual review recommended.")
-            elif score >= 40:
-                st.warning("⚠️ **LOW AUTHENTICITY** - Multiple indicators suggest potential manipulation or AI generation.")
+            # Status indicator
+            if score >= 75:
+                status_class = "status-authentic"
+                status_text = "Authentic"
+                status_desc = "Analysis indicates genuine content with minimal manipulation indicators."
+            elif score >= 50:
+                status_class = "status-suspicious" 
+                status_text = "Review Required"
+                status_desc = "Some inconsistencies detected. Manual verification recommended."
             else:
-                st.error("❌ **VERY LOW AUTHENTICITY** - Strong evidence of AI generation or significant manipulation.")
+                status_class = "status-likely-fake"
+                status_text = "Likely Synthetic"
+                status_desc = "Multiple indicators suggest AI generation or significant manipulation."
+            
+            st.markdown(f'<div class="status-indicator {status_class}">{status_text}</div>', unsafe_allow_html=True)
+            st.markdown(f'<p style="color: #86868b; margin: 0.5rem 0 2rem 0;">{status_desc}</p>', unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Key Factors
-            if factors:
-                st.markdown('<div class="analysis-section">', unsafe_allow_html=True)
-                st.markdown("### 📋 Key Analysis Factors")
-                
-                factor_df = pd.DataFrame([
-                    {"Factor": factor, "Impact": impact, "Type": "Negative" if impact < 0 else "Positive"}
-                    for factor, impact in factors.items()
-                ])
-                
-                if not factor_df.empty:
-                    st.dataframe(factor_df, use_container_width=True, hide_index=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Detailed Analysis Graphs
-            st.markdown("### 📈 Detailed Analysis Visualizations")
-            
-            # Display graphs in tabs
-            tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                "👤 Facial Analysis", 
-                "💡 Lighting Analysis", 
-                "👁️ Eye Movement", 
-                "🖼️ Background Analysis", 
-                "📊 Metadata Check"
-            ])
+            # Analysis tabs with minimal design
+            tab1, tab2, tab3 = st.tabs(["Analysis", "Technical", "Export"])
             
             with tab1:
-                st.plotly_chart(graphs['facial_landmarks'], use_container_width=True)
-                st.markdown("*Analysis of facial landmark stability and natural positioning across frames/regions.*")
+                # Key findings
+                if factors:
+                    st.markdown('<h4 class="section-header">Key Findings</h4>', unsafe_allow_html=True)
+                    
+                    for factor, impact in list(factors.items())[:5]:  # Show top 5 factors only
+                        impact_color = "#ff3b30" if impact < 0 else "#30d158"
+                        st.markdown(f"""
+                        <div class="analysis-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>{factor}</span>
+                                <span style="color: {impact_color}; font-weight: 600;">{impact:+.0f}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Simplified visualization (one main chart)
+                st.markdown('<h4 class="section-header">Analysis Overview</h4>', unsafe_allow_html=True)
+                st.plotly_chart(graphs['facial_landmarks'], use_container_width=True, config={'displayModeBar': False})
             
             with tab2:
-                st.plotly_chart(graphs['lighting'], use_container_width=True)
-                st.markdown("*Examination of lighting consistency and shadow coherence throughout the image.*")
+                # AI Analysis summary
+                st.markdown('<h4 class="section-header">AI Analysis</h4>', unsafe_allow_html=True)
+                with st.expander("View detailed analysis", expanded=False):
+                    st.markdown(f'<div style="background: #f5f5f7; padding: 1rem; border-radius: 8px; font-size: 0.9rem; line-height: 1.6;">{gemini_analysis}</div>', unsafe_allow_html=True)
+                
+                # Technical metadata
+                st.markdown('<h4 class="section-header">Metadata</h4>', unsafe_allow_html=True)
+                with st.expander("View technical details", expanded=False):
+                    # Show only key metadata
+                    key_metadata = {
+                        "Format": metadata.get('format', 'Unknown'),
+                        "Size": f"{metadata.get('size', ['Unknown', 'Unknown'])[0]}×{metadata.get('size', ['Unknown', 'Unknown'])[1]}" if 'size' in metadata else 'Unknown',
+                        "File Size": f"{metadata.get('file_size', 0) / 1024:.1f} KB",
+                        "Has EXIF": "Yes" if metadata.get('has_exif', False) else "No"
+                    }
+                    
+                    for key, value in key_metadata.items():
+                        st.markdown(f"**{key}:** {value}")
             
             with tab3:
-                st.plotly_chart(graphs['eye_movement'], use_container_width=True)
-                st.markdown("*Assessment of natural eye movement patterns and blinking frequency.*")
-            
-            with tab4:
-                st.plotly_chart(graphs['background'], use_container_width=True)
-                st.markdown("*Detection of background distortions, artifacts, and consistency issues.*")
-            
-            with tab5:
-                st.plotly_chart(graphs['metadata'], use_container_width=True)
-                st.markdown("*Analysis of file metadata integrity and potential tampering indicators.*")
-            
-            # Gemini Analysis Summary
-            st.markdown('<div class="analysis-section">', unsafe_allow_html=True)
-            st.markdown("### 🤖 AI Analysis Summary")
-            st.markdown("**Detailed findings from Gemini AI:**")
-            st.write(gemini_analysis)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Technical Metadata
-            with st.expander("🔧 Technical Metadata Details"):
-                st.json(metadata)
-            
-            # Download Report
-            st.markdown("### 💾 Export Results")
-            
-            report_data = {
-                "file_name": uploaded_file.name,
-                "analysis_timestamp": datetime.now().isoformat(),
-                "authenticity_score": score,
-                "file_type": file_type,
-                "factors": factors,
-                "gemini_analysis": gemini_analysis,
-                "metadata": metadata
-            }
-            
-            report_json = json.dumps(report_data, indent=2, default=str)
-            
-            st.download_button(
-                label="📄 Download Analysis Report (JSON)",
-                data=report_json,
-                file_name=f"authenticity_report_{uploaded_file.name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json"
-            )
+                st.markdown('<h4 class="section-header">Export Results</h4>', unsafe_allow_html=True)
+                
+                # Create simplified report
+                report_data = {
+                    "file_name": uploaded_file.name,
+                    "timestamp": datetime.now().isoformat(),
+                    "authenticity_score": f"{score:.1f}%",
+                    "status": status_text,
+                    "key_factors": {k: v for k, v in list(factors.items())[:5]} if factors else {},
+                    "file_type": file_type
+                }
+                
+                report_json = json.dumps(report_data, indent=2, default=str)
+                
+                st.download_button(
+                    label="Download Report",
+                    data=report_json,
+                    file_name=f"analysis_{uploaded_file.name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
     
-    # Footer
-    st.markdown("---")
+    # Footer - minimal and professional
     st.markdown("""
-    <div style="text-align: center; color: #6c757d; font-size: 0.9em; margin: 2rem 0;">
-        <p>🔬 Powered by Google Gemini AI • Built with Streamlit</p>
-        <p><strong>Disclaimer:</strong> This tool provides AI-assisted analysis for reference only. 
-        Results should be verified by human experts for critical applications.</p>
+    <div style="text-align: center; margin: 4rem 0 2rem 0; padding: 2rem 0; border-top: 1px solid #f5f5f7;">
+        <p style="color: #86868b; font-size: 0.875rem; margin: 0;">
+            Powered by advanced AI • Results are for reference only
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
